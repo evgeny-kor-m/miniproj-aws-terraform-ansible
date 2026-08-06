@@ -164,8 +164,28 @@ Backend EC2 Instances
 
 ## 🖥️ EC2 Instances
 
-Terraform must create all required EC2 instances.
+Terraform must create all required EC2 instances.  
+```
+How to check what LTS (Long Term Support) version currently relevant:
+aws ec2 describe-images \
+  --owners 099720109477 \
+  --filters "Name=name,Values=ubuntu/images/hvm-ssd-gp3/ubuntu-*-amd64-server-*" \
+            "Name=state,Values=available" \
+  --query 'sort_by(Images, &CreationDate)[-5:].[Name,CreationDate]' \
+  --output table \
+  --region eu-west-1
 
+Output:
+-------------------------------------------------------------------------------------------------------
+|                                           DescribeImages                                            |
++------------------------------------------------------------------------+----------------------------+
+|  ubuntu/images/hvm-ssd-gp3/ubuntu-resolute-26.04-amd64-server-20260714 |  2026-07-14T07:27:11.000Z  |  [v]
+|  ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-20260714    |  2026-07-14T11:54:28.000Z  |
+|  ubuntu/images/hvm-ssd-gp3/ubuntu-resolute-26.04-amd64-server-20260722 |  2026-07-22T08:12:24.000Z  |
+|  ubuntu/images/hvm-ssd-gp3/ubuntu-resolute-26.04-amd64-server-20260731 |  2026-07-31T06:23:36.000Z  |
+|  ubuntu/images/hvm-ssd-gp3/ubuntu-resolute-26.04-amd64-server-20260806 |  2026-08-06T07:34:13.000Z  |
++------------------------------------------------------------------------+----------------------------+
+```
 ### Frontend Servers
 
 Create:
