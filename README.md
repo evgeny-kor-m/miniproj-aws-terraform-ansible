@@ -130,35 +130,34 @@ Create the required AWS components using Terraform and secure communication betw
 
 ---
 
-## ⚖️ Application Load Balancer
+## 🔒 Security Groups
 
-Create an:
+Create dedicated Security Groups using Terraform.
 
-```text
-Application Load Balancer (ALB)
-```
+At minimum, create Security Groups for:
 
-The ALB must be deployed in the **public subnets**.
+* ALB
+* Frontend
+* Backend
+* Ansible Master
 
-The ALB will receive incoming traffic and forward requests to the backend application.
+Follow the principle of least privilege.
 
----
-
-## 🎯 Target Group
-
-Create a Target Group containing the backend EC2 instances.
-
-The architecture should be:
+Example:
 
 ```text
 Internet
    ↓
-ALB
+ALB : 80/443
    ↓
-Target Group
+Backend : Application Port
    ↓
-Backend EC2 Instances
+EFS : NFS 2049
 ```
+
+The backend should only accept application traffic from the ALB Security Group.
+
+The Ansible Master should only allow required management access.
 
 ---
 
@@ -224,36 +223,38 @@ The Ansible Master will manage the application servers using Ansible.
 
 ---
 
-## 🔒 Security Groups
+## 🎯 Target Group
 
-Create dedicated Security Groups using Terraform.
+Create a Target Group containing the backend EC2 instances.
 
-At minimum, create Security Groups for:
-
-* ALB
-* Frontend
-* Backend
-* Ansible Master
-
-Follow the principle of least privilege.
-
-Example:
+The architecture should be:
 
 ```text
 Internet
    ↓
-ALB : 80/443
+ALB
    ↓
-Backend : Application Port
+Target Group
    ↓
-EFS : NFS 2049
+Backend EC2 Instances
 ```
 
-The backend should only accept application traffic from the ALB Security Group.
+---
 
-The Ansible Master should only allow required management access.
+## ⚖️ Application Load Balancer
+
+Create an:
+
+```text
+Application Load Balancer (ALB)
+```
+
+The ALB must be deployed in the **public subnets**.
+
+The ALB will receive incoming traffic and forward requests to the backend application.
 
 ---
+
 
 # 🗄️ Part 3 – EFS & Application Deployment (25 Points)
 

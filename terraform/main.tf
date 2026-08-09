@@ -15,7 +15,7 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
-        tls = {
+    tls = {
       source  = "hashicorp/tls"
       version = "~> 4.0"
     }
@@ -27,7 +27,7 @@ terraform {
 }
 
 provider "aws" {
-  region                      = "us-east-1"
+  region     = "us-east-1"
 }
 
 ###  Virtual Private Cloud (VPC)  ########################################
@@ -45,7 +45,7 @@ resource "aws_vpc" "vpc_param" {
 
 ###  Subnets  ############################################################
 
-resource "aws_subnet" "public-snet-1a-param" {
+resource "aws_subnet" "public-snet-param-1a" {
   vpc_id     = aws_vpc.vpc_param.id
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-east-1a"
@@ -58,7 +58,7 @@ resource "aws_subnet" "public-snet-1a-param" {
 
 }
 
-resource "aws_subnet" "public-snet-1b-param" {
+resource "aws_subnet" "public-snet-param-1b" {
   vpc_id     = aws_vpc.vpc_param.id
   cidr_block = "10.0.2.0/24"
   availability_zone = "us-east-1b"
@@ -72,7 +72,7 @@ resource "aws_subnet" "public-snet-1b-param" {
 
 ### Private subnets
 
-resource "aws_subnet" "private-snet-1a-param" {
+resource "aws_subnet" "private-snet-param-1a" {
   vpc_id     = aws_vpc.vpc_param.id
   cidr_block = "10.0.3.0/24"
   availability_zone = "us-east-1a"
@@ -84,7 +84,7 @@ resource "aws_subnet" "private-snet-1a-param" {
   depends_on = [aws_vpc.vpc_param]
 }
 
-resource "aws_subnet" "private-snet-1b-param" {
+resource "aws_subnet" "private-snet-param-1b" {
   vpc_id     = aws_vpc.vpc_param.id
   cidr_block = "10.0.4.0/24"
   availability_zone = "us-east-1b"
@@ -112,12 +112,12 @@ resource "aws_internet_gateway" "igw_param" {
 
 locals {
   public_subnets = {
-    "1a" = aws_subnet.public-snet-1a-param.id
-    "1b" = aws_subnet.public-snet-1b-param.id
+    "1a" = aws_subnet.public-snet-param-1a.id
+    "1b" = aws_subnet.public-snet-param-1b.id
   }
   private_subnets = {
-    "1a" = aws_subnet.private-snet-1a-param.id
-    "1b" = aws_subnet.private-snet-1b-param.id
+    "1a" = aws_subnet.private-snet-param-1a.id
+    "1b" = aws_subnet.private-snet-param-1b.id
   }
 }
 
@@ -253,14 +253,16 @@ data "aws_ssm_parameter" "ubuntu" {
 }
 
 resource "aws_instance" "ec2-frontend-param" {
-  ami = data.aws_ssm_parameter.ubuntu.value
-  instance_type = "t3.micro"
-  subnet_id = aws_subnet.public-snet-1a-param.id
-  vpc_security_group_ids = [aws_security_group.frontend-sg-param.id]   # otherwise all traffic is blocked
-  key_name = aws_key_pair.deployer.key_name                 # otherwise you can't access it via SSH
-  associate_public_ip_address = true                        # if this is a public subnet and external access is required
+    for_each = local.public_subnets
+    ami = data.aws_ssm_parameter.ubuntu.value
+    instance_type = "t3.micro"
+    subnet_id = each.value
+    vpc_security_group_ids = [aws_security_group.frontend-sg-param.id]   # otherwise all traffic is blocked
+    key_name = aws_key_pair.deployer.key_name                            # otherwise you can't access it via SSH
+    associate_public_ip_address = true                                   # if this is a public subnet and external access is required
 
-tags = {
-  Name = "ec2-terraform-frontend-1a"
- }
+    tags = {
+        Name = "ec2-terraform-frontend-${each.key}"
+    }
 }
+
