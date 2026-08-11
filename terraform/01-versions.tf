@@ -7,13 +7,20 @@
 # terraform plan
 # terraform apply (plan & apply)
 # terraform destroy (destroy the resources)
-# terraform state list
 # terraform providers
-# terraform taint 'aws_instance.ec2-backend-param["1b"]'  -  recreate instance
+# terraform state list
 
+# - remove resource from state
+# terraform state rm aws_ecr_repository.frontend-img-param
+# terraform state list
+
+# -  recreate instance
+# terraform taint 'aws_instance.ec2-backend-param["1b"]'  
+# terraform apply                                         
+
+# - "-target" is a , flag that forces Terraform to apply changes only to the specified resource (and its dependencies), ignoring everything else in the configuration.
 # terraform apply -target=aws_instance.ec2-frontend-param 
-#   "-target" - is a flag that forces Terraform to apply changes only to the specified resource (and its dependencies), 
-#   ignoring everything else in the configuration, even if there are planned changes there too.
+
 
 ###  Providers  #######################################################
 

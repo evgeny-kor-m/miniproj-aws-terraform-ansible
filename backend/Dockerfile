@@ -2,11 +2,11 @@ FROM node:20
 
 WORKDIR /usr/src/app
 
-COPY ./backend/src/package.json .
+COPY backend/src/package.json .
 
 RUN npm install
 
-COPY ./backend/src .
+COPY backend/src .
 
 EXPOSE 3000
 

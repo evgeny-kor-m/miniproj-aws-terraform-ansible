@@ -36,7 +36,7 @@ output "efs_dns_name" {
   description = "EFS DNS name for mounting"
 }
 
-output "access_point_ids" {
-  value       = aws_efs_access_point.efs-access-point-param.id
-  description = "Access point IDs by service"
-}
+# output "access_point_ids" {
+#   value       = aws_efs_access_point.efs-access-point-param.id
+#   description = "Access point IDs by service"
+# }

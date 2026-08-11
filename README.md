@@ -300,11 +300,33 @@ Create the required EFS Mount Targets in the private subnets.
 
 The backend servers must mount the EFS filesystem.
 
+```
 Troubleshooting : sudo cat /var/log/cloud-init-output.log | grep "mount\|efs|error"
 terraform taint 'aws_instance.ec2-backend-param["1a"]'
 terraform taint 'aws_instance.ec2-backend-param["1b"]'
 terraform taint aws_instance.ec2-ansible-param
 terraform apply
+
+3.93.212.251    ansible  public
+32.192.1.137  frontend   public
+
+10.0.4.107  ec2-tf-backend-1b  private
+10.0.3.252  ec2-tf-backend-1a  private
+
+cd /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform
+
+ssh -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@3.93.212.251      -  ansible
+ssh -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@32.192.1.137     -  frontend
+
+ssh -o ProxyCommand="ssh -i ./aws-ssh-key.pem -W %h:%p ubuntu@3.93.212.251" -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@10.0.4.107       -  ec2-tf-backend-1b
+ssh -o ProxyCommand="ssh -i ./aws-ssh-key.pem -W %h:%p ubuntu@3.93.212.251" -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@10.0.3.252      -  ec2-tf-backend-1a
+
+
+ssh -i ~/.ssh/aws-ssh-key.pem ansible@10.0.4.107
+ssh -i ~/.ssh/aws-ssh-key.pem ansible@10.0.3.252
+```
+
+
 ---
 
 ## 🐳 Backend Application
@@ -317,6 +339,12 @@ The backend application must:
 * Be accessible through the ALB
 * Run using Docker
 * Mount the EFS filesystem where required
+
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 111314928072.dkr.ecr.us-east-1.amazonaws.com
+
+docker build -t backend -f ./backend/Dockerfile .
+docker tag backend:latest 111314928072.dkr.ecr.us-east-1.amazonaws.com/backend-img-tf:latest
+docker push 111314928072.dkr.ecr.us-east-1.amazonaws.com/backend-img-tf:latest
 
 ---
 
@@ -332,10 +360,11 @@ The frontend application must:
 
 ssh -i aws-ssh-key.pem ubuntu@3.82.104.29
 
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 111314928072.dkr.ecr.us-east-1.amazonaws.com
 
 docker build -t frontend -f ./frontend/Dockerfile .
-docker tag frontend:latest 111314928072.dkr.ecr.us-east-1.amazonaws.com/frontend-img:latest
-docker push 111314928072.dkr.ecr.us-east-1.amazonaws.com/frontend-img:latest
+docker tag frontend:latest 111314928072.dkr.ecr.us-east-1.amazonaws.com/frontend-img-tf:latest
+docker push 111314928072.dkr.ecr.us-east-1.amazonaws.com/frontend-img-tf:latest
 
 ---
 
