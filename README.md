@@ -1,5 +1,25 @@
 # 🚀 Mini Project – AWS + Terraform + Ansible
 
+## Extension for Terraform files
+
+The solution is to install the official HashiCorp Terraform extension:   
+```
+1. Open Extensions (the cube icon on the left, or Ctrl+Shift+X)
+2. Search for: HashiCorp Terraform
+3. Install the HashiCorp extension (created by HashiCorp, not a third-party one)—it's called "HashiCorp Terraform."
+4. After installation, restart VS Code (Ctrl+Shift+P → Developer: Reload Window)
+```
+Also useful: enable autoformatting and validation on the fly:   
+```
+In settings.json (Ctrl+Shift+P → Preferences: Open User Settings (JSON)):
+json{
+      "[terraform]": {
+      "editor.defaultFormatter": "hashicorp.terraform",
+      "editor.formatOnSave": true
+      },
+      "terraform.languageServer.enable": true
+}
+```
 ## 🎯 Project Overview
 
 In this project you will build a complete AWS infrastructure using **Terraform** and automate server configuration and application deployment using **Ansible**.
@@ -217,7 +237,7 @@ Create:
 1 Ansible Master EC2 Instance
 ```
 
-The Ansible Master must be located in a public subnet.
+The Ansible Master must be located in a **public subnets**.
 
 The Ansible Master will manage the application servers using Ansible.
 
@@ -280,6 +300,11 @@ Create the required EFS Mount Targets in the private subnets.
 
 The backend servers must mount the EFS filesystem.
 
+Troubleshooting : sudo cat /var/log/cloud-init-output.log | grep "mount\|efs|error"
+terraform taint 'aws_instance.ec2-backend-param["1a"]'
+terraform taint 'aws_instance.ec2-backend-param["1b"]'
+terraform taint aws_instance.ec2-ansible-param
+terraform apply
 ---
 
 ## 🐳 Backend Application
@@ -304,6 +329,13 @@ The frontend application must:
 * Run as a Docker container
 * Be accessible from the internet
 * Communicate with the backend through the ALB
+
+ssh -i aws-ssh-key.pem ubuntu@3.82.104.29
+
+
+docker build -t frontend -f ./frontend/Dockerfile .
+docker tag frontend:latest 111314928072.dkr.ecr.us-east-1.amazonaws.com/frontend-img:latest
+docker push 111314928072.dkr.ecr.us-east-1.amazonaws.com/frontend-img:latest
 
 ---
 

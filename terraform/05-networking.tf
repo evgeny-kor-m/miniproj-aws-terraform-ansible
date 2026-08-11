@@ -6,7 +6,7 @@ resource "aws_internet_gateway" "igw_param" {
   vpc_id = aws_vpc.vpc_param.id
 
   tags = {
-    Name = "igw_terraform"
+    Name = "igw-tf"
   }
     
   depends_on = [aws_vpc.vpc_param]
@@ -19,7 +19,7 @@ resource "aws_eip" "eip_param" {
   domain   = "vpc"   # This specifies that the EIP is for use in VPC (required for modern AWS)
 
   tags = {
-    Name = "eip-terraform-${each.key}"
+    Name = "eip-tf-${each.key}"
   }
 
   # Ensure the Internet Gateway exists before allocating
@@ -28,13 +28,13 @@ resource "aws_eip" "eip_param" {
 
 ### NAT Gateway #####################################################
 
-resource "aws_nat_gateway" "ngw_param" {
+resource "aws_nat_gateway" "ngw-param" {
   for_each      = local.public_subnets
   allocation_id = aws_eip.eip_param[each.key].id
   subnet_id     = each.value
 
   tags = {
-    Name = "ngw-terraform-${each.key}"
+    Name = "ngw-tf-${each.key}"
   }
   
   # Ensure the Internet Gateway exists before allocating
@@ -43,9 +43,8 @@ resource "aws_nat_gateway" "ngw_param" {
 
 ### Route Tables #####################################################
 
-# 2 public subnet -> igw
+# 1 public subnet -> igw
 resource "aws_route_table" "public-rt-param" {
-  for_each = local.public_subnets
   vpc_id = aws_vpc.vpc_param.id
 
   route {
@@ -54,7 +53,7 @@ resource "aws_route_table" "public-rt-param" {
   }
 
   tags = {
-    Name = "public-rt-terraform-${each.key}"
+    Name = "public-rt-tf"
   }
 }
 
@@ -65,21 +64,25 @@ resource "aws_route_table" "private-rt-param" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.ngw_param[each.key].id
+    nat_gateway_id = aws_nat_gateway.ngw-param[each.key].id
   }
 
   tags = {
-    Name = "private-rt-terraform-${each.key}"
+    Name = "private-rt-tf-${each.key}"
   }
 }
 
 ### Route Table Associations ###########################################
 
+# public
+
 resource "aws_route_table_association" "public-rt-associat-param" {
   for_each = local.public_subnets
   subnet_id      = each.value
-  route_table_id = aws_route_table.public-rt-param[each.key].id
+  route_table_id = aws_route_table.public-rt-param.id
 }
+
+# private
 
 resource "aws_route_table_association" "private-rt-associat-param" {
   for_each = local.private_subnets

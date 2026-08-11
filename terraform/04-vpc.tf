@@ -9,7 +9,7 @@ resource "aws_vpc" "vpc_param" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "vpc_terraform"
+    Name = "vpc_tf"
   }
 }
 
@@ -23,7 +23,7 @@ resource "aws_subnet" "public-snet-param-1a" {
   availability_zone = "us-east-1a"
 
   tags = {
-    Name = "public-snet-terraform-1a"
+    Name = "public-snet-tf-1a"
   }
 
   depends_on = [aws_vpc.vpc_param]
@@ -36,7 +36,7 @@ resource "aws_subnet" "public-snet-param-1b" {
   availability_zone = "us-east-1b"
 
   tags = {
-    Name = "public-snet-terraform-1b"
+    Name = "public-snet-tf-1b"
   }
 
   depends_on = [aws_vpc.vpc_param]
@@ -50,7 +50,7 @@ resource "aws_subnet" "private-snet-param-1a" {
   availability_zone = "us-east-1a"
 
   tags = {
-    Name = "private-snet-terraform-1a"
+    Name = "private-snet-tf-1a"
   }
 
   depends_on = [aws_vpc.vpc_param]
@@ -62,7 +62,7 @@ resource "aws_subnet" "private-snet-param-1b" {
   availability_zone = "us-east-1b"
 
   tags = {
-    Name = "private-snet-terraform-1b"
+    Name = "private-snet-tf-1b"
   }
 
   depends_on = [aws_vpc.vpc_param]

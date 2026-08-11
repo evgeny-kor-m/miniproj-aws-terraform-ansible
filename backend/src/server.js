@@ -20,6 +20,14 @@ function saveDB(data) {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 }
 
+// GET healthcheck
+app.get("/healthcheck", (req, res) => {
+    response = {
+        'healthCheck': 'Express service is up and running!'
+    }
+    res.json(response);
+});
+
 // GET all products
 app.get("/api/products", (req, res) => {
     const db = readDB();
