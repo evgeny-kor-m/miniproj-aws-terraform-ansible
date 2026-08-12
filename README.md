@@ -148,4 +148,4 @@ Auto-generating inventory.yaml from Terraform via templatefile + local_file
 ```
 git clone https://github.com/evgeny-kor-m/miniproj-aws-terraform-ansible.git
 cd miniproj-aws-terraform-ansible/ansible
-ansible all -i inventory.yaml -m ping
+ansible all -i inventory.yml -m ping
