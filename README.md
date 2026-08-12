@@ -46,33 +46,6 @@ Output:
 +------------------------------------------------------------------------+----------------------------+
 ```
 
-## 🗄️ Amazon EFS
-
-```
-Troubleshooting : sudo cat /var/log/cloud-init-output.log | grep "mount\|efs|error"
-terraform taint 'aws_instance.ec2-backend-param["1a"]'
-terraform taint 'aws_instance.ec2-backend-param["1b"]'
-terraform taint aws_instance.ec2-ansible-param
-terraform apply
-
-3.93.212.251    ansible  public
-32.192.1.137  frontend   public
-
-10.0.4.107  ec2-tf-backend-1b  private
-10.0.3.252  ec2-tf-backend-1a  private
-
-cd /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform
-
-ssh -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@3.93.212.251      -  ansible
-ssh -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@32.192.1.137     -  frontend
-
-ssh -o ProxyCommand="ssh -i ./aws-ssh-key.pem -W %h:%p ubuntu@3.93.212.251" -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@10.0.4.107       -  ec2-tf-backend-1b
-ssh -o ProxyCommand="ssh -i ./aws-ssh-key.pem -W %h:%p ubuntu@3.93.212.251" -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@10.0.3.252      -  ec2-tf-backend-1a
-
-
-ssh -i ~/.ssh/aws-ssh-key.pem ansible@10.0.4.107
-ssh -i ~/.ssh/aws-ssh-key.pem ansible@10.0.3.252
-```
 ---
 
 ## 🐳 Backend Application
@@ -97,55 +70,64 @@ docker push 111314928072.dkr.ecr.us-east-1.amazonaws.com/frontend-img-tf:latest
 
 ---
 
-1. Terraform — Basic Setup
 
-Understood providers (hashicorp/aws, tls, local), terraform init-upgrade
-Split the monolithic main.tf into domain-specific files (vpc.tf, networking.tf, security-groups.tf, iam.tf, alb.tf, ecr.tf, efs.tf, key-pair.tf, ec2.tf, outputs.tf)
 
-2. Network — VPC/Subnets/NAT/IGW
 
-4 subnets (2 public + 2 private) using for_each and locals
-Understood the difference between a resource with for_each (indexing [each.key]) and individual static resources
-Solved several real-world incidents: renaming a resource (igw_param → igw-param) caused destroy+create instead of a simple update—reverted the name back
-create_before_destroy for Security Groups — resolved a deadlock when recreating Security Groups that were still in use by instances.
-
-3. EC2 + IAM
+## EC2 + IAM
 
 Frontend (public), 2x Backend (private, via ALB Target Group), Ansible Master (public)
 Ubuntu 26.04 LTS via SSM Parameter (instead of hardcoding the AMI ID)
 Separated IAM roles by responsibility: ec2-ecr-role-param (ECR access for frontend/backend) separate from ansible-role-param (access only to the SSM parameter with the key)
-Rewrote trust policy using data "aws_iam_policy_document" instead of jsonencode
 
-4. SSH Access Security
-
-tls_private_key + aws_key_pair — a single key for all instances
-Ansible user on frontend/backend with Public key in authorized_keys (not a password)
-Private key for Ansible Master — via SSM SecureString, not hardcoded in user_data
-
-5. EFS
+## 🗄️ Amazon EFS
 
 File system + mount targets + overcome a failure with amazon-efs-utils (incompatibility of Rust versions in Ubuntu 26.04) → reverted to a simple nfs4 mount
-Fixed permissions (chown ubuntu:ubuntu after mounting)
+in ec2.tf in ec2-backend-tf-${each.key} instances  
+```
+Troubleshooting : sudo cat /var/log/cloud-init-output.log | grep "mount\|efs|error"
 
-6. ECR
+terraform taint 'aws_instance.ec2-backend-param["1b"]'
+terraform apply
+
+ssh -o ProxyCommand="ssh -i ./aws-ssh-key.pem -W %h:%p ubuntu@3.93.212.251" -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@10.0.4.107       -  ec2-tf-backend-1b
+touch /mnt/efs/test.txt
+ssh -o ProxyCommand="ssh -i ./aws-ssh-key.pem -W %h:%p ubuntu@3.93.212.251" -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@10.0.3.252      -  ec2-tf-backend-1a
+cat /mnt/efs/test.txt
+```
+## ECR
 
 Two repositories (frontend/backend) with lifecycle policies
-Discussed force_delete for Terraform destroy when the repository is not empty
+Added force_delete for Terraform destroy when the repository is not empty
 
-7. Diagnostics/DevOps Hygiene
+## SSH Access Security 
+tls_private_key + aws_key_pair — a single key for all instances
 
-Discussed the differences between validate/plan/apply, -target, taint, state rm
-Wrote an audit script for remaining AWS resources after destroy
+## Ansible 
 
-8. Ansible Inventory
+For Ansible Master add ansible installation in ec2-ansible and SSH Private key
+      in key-pair.tf created SSM SecureString with Private key
+      in iam.tf added ansible-role to allow read Private key from SSM_Parameter
+      in ec2.tf added permissions by "iam_instance_profile" what have ansible-role
 
-Designed a master → slave → structure Frontend/Backend (nested children)
-We covered the mechanics of group_vars and ansible_host (requires real IPs, not tags)
-Auto-generating inventory.yaml from Terraform via templatefile + local_file
+Ansible user on frontend/backend with SSH Public key in authorized_keys (not a password)
+      Take "public_key" from local terraform parameters in key-pair.tf
 
+Ansible Inventory
+      Designed a master → slave → structure Frontend/Backend (nested children), corellated with group_vars.
+      Auto-generating inventory.yaml from Terraform via templatefile + local_file, populated with real IPs, at time "terraform apply" execution 
+            Create an ansible/inventory.tpl template in your Terraform project.
+            Created inventory.tf with "local_file" + templatefile. Take IP from local terraform parameters and fill /ansible/inventory.yaml from ansible/inventory.tpl
 
-## Ansible check 
+### Ansible check 
+From Master
 ```
+ssh -i /mnt/e/DevOps/GIT/miniproj-aws-terraform-ansible/terraform/aws-ssh-key.pem ubuntu@< ansible-public-ip >
+
+ssh -i ~/.ssh/aws-ssh-key.pem ansible@10.0.4.107
+ssh -i ~/.ssh/aws-ssh-key.pem ansible@10.0.3.252
+
 git clone https://github.com/evgeny-kor-m/miniproj-aws-terraform-ansible.git
 cd miniproj-aws-terraform-ansible/ansible
 ansible all -i inventory.yml -m ping
+
+```

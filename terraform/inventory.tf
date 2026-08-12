@@ -1,4 +1,4 @@
-
+# Terraform generates inventory via a templatefile
 
 resource "local_file" "ansible_inventory" {
   content = templatefile("${path.module}/../ansible/inventory.tpl", {
