@@ -37,7 +37,7 @@ resource "aws_instance" "ec2-frontend-param" {
   EOF
 
   tags = {
-    Name        = "ec2-tf-frontend-1a"
+    Name        = "ec2-frontend-tf-1a"
     Environment = "Lab"
     ManagedBy   = "Terraform"
   }
@@ -75,11 +75,14 @@ resource "aws_instance" "ec2-backend-param" {
     chown -R ansible:ansible /home/ansible/.ssh
     chmod 700 /home/ansible/.ssh
     chmod 600 /home/ansible/.ssh/authorized_keys
+    # echo PubkeyAuthentication yes >> /etc/ssh/sshd_config
+    # echo PasswordAuthentication yes >> /etc/ssh/sshd_config
+    # echo "ansible:ansible" | chpasswd
     echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
   EOF
 
   tags = {
-    Name        = "ec2-tf-backend-${each.key}"
+    Name        = "ec2-backend-tf-${each.key}"
     Environment = "Lab"
     ManagedBy   = "Terraform"
   }
@@ -111,7 +114,7 @@ resource "aws_instance" "ec2-ansible-param" {
   EOF
 
   tags = {
-    Name        = "ec2-tf-ansible-1a"
+    Name        = "ec2-ansible-tf-1b"
     Environment = "Lab"
     ManagedBy   = "Terraform"
   }

@@ -40,3 +40,18 @@ output "efs_dns_name" {
 #   value       = aws_efs_access_point.efs-access-point-param.id
 #   description = "Access point IDs by service"
 # }
+
+output "frontend_private_ip" {
+  value       = aws_instance.ec2-frontend-param.private_ip
+  description = "Private IP of the frontend instance"
+}
+
+output "backend_private_ips" {
+  value       = { for k, v in aws_instance.ec2-backend-param : k => v.private_ip }
+  description = "Private IPs of backend instances by AZ"
+}
+
+output "ansible_master_private_ip" {
+  value       = aws_instance.ec2-ansible-param.private_ip
+  description = "Private IP of the Ansible Master"
+}

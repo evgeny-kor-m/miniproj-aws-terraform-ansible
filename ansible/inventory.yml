@@ -1,0 +1,30 @@
+all:
+  children:
+    slaves:
+      hosts:
+        frontend-node:
+          ansible_host: ec2-frontend-tf-1a
+          ansible_user: ansible
+          ansible_ssh_private_key_file: /home/ubuntu/.ssh/aws-ssh-key.pem  # To connect via SSH to (frontend/backend), use this key file
+
+        backend-node-1:
+          ansible_host: ec2-backend-tf-1a
+          ansible_user: ansible
+          ansible_ssh_private_key_file: /home/ubuntu/.ssh/aws-ssh-key.pem  # To connect via SSH to (frontend/backend), use this key file
+
+        backend-node-2:
+          ansible_host: ec2-backend-tf-1b
+          ansible_user: ansible
+          ansible_ssh_private_key_file: /home/ubuntu/.ssh/aws-ssh-key.pem  # To connect via SSH to (frontend/backend), use this key file
+
+    master:
+      hosts:
+        master-node:
+          ansible_connection: local
+          ansible_become_method: sudo  # to run on self
+          ansible_become: yes          # to run on self
+
+    cluster:
+      children:
+        master:
+        slaves:

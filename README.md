@@ -396,12 +396,6 @@ Docker Run
 
 # ⚙️ Part 4 – Ansible Automation (25 Points)
 
-## 🎯 Objective
-
-Use Ansible to automate the configuration and deployment of the EC2 servers created by Terraform.
-
-Terraform is responsible for **infrastructure**.
-
 Ansible is responsible for **configuration and application deployment**.
 
 ---

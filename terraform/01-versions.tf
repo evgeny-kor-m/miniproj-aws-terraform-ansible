@@ -9,6 +9,8 @@
 # terraform destroy (destroy the resources)
 # terraform providers
 # terraform state list
+# terraform output
+# terraform output backend_private_ips 
 
 # - remove resource from state
 # terraform state rm aws_ecr_repository.frontend-img-param
@@ -20,6 +22,8 @@
 
 # - "-target" is a , flag that forces Terraform to apply changes only to the specified resource (and its dependencies), ignoring everything else in the configuration.
 # terraform apply -target=aws_instance.ec2-frontend-param 
+
+# ../scripts/check-aws-leftovers.sh
 
 
 ###  Providers  #######################################################

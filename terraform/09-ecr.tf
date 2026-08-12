@@ -4,14 +4,15 @@
 
 resource "aws_ecr_repository" "frontend-img-param" {
   name                 = "frontend-img-tf"
-  image_tag_mutability = "MUTABLE"       # MUTABLE, IMMUTABLE, IMMUTABLE_WITH_EXCLUSION, or MUTABLE_WITH_EXCLUSION
+  image_tag_mutability = "MUTABLE" # MUTABLE, IMMUTABLE, IMMUTABLE_WITH_EXCLUSION, or MUTABLE_WITH_EXCLUSION
+  force_delete         = true      # Allows you to delete the repository along with the images
 
   image_scanning_configuration {
-    scan_on_push = true                  # Automatically scans images for vulnerabilities
+    scan_on_push = true # Automatically scans images for vulnerabilities
   }
 
   encryption_configuration {
-    encryption_type = "AES256"           # Encrypts your images at rest
+    encryption_type = "AES256" # Encrypts your images at rest
   }
 
   tags = {
@@ -24,14 +25,15 @@ resource "aws_ecr_repository" "frontend-img-param" {
 
 resource "aws_ecr_repository" "backend-img-param" {
   name                 = "backend-img-tf"
-  image_tag_mutability = "MUTABLE"       
+  image_tag_mutability = "MUTABLE"
+  force_delete         = true # Allows you to delete the repository along with the images
 
   image_scanning_configuration {
-    scan_on_push = true                  
+    scan_on_push = true
   }
 
   encryption_configuration {
-    encryption_type = "AES256"           
+    encryption_type = "AES256"
   }
 
   tags = {
@@ -65,7 +67,7 @@ resource "aws_ecr_lifecycle_policy" "frontend-lifecycle" {
         description  = "Keep only the last 5 tagged images"
         selection = {
           tagStatus     = "tagged"
-          tagPrefixList = ["v", "latest"]   # applies only to images with these tag prefixes
+          tagPrefixList = ["v", "latest"] # applies only to images with these tag prefixes
           countType     = "imageCountMoreThan"
           countNumber   = 5
         }
@@ -102,7 +104,7 @@ resource "aws_ecr_lifecycle_policy" "backend-lifecycle" {
         description  = "Keep only the last 5 tagged images"
         selection = {
           tagStatus     = "tagged"
-          tagPrefixList = ["v", "latest"]   # applies only to images with these tag prefixes
+          tagPrefixList = ["v", "latest"] # applies only to images with these tag prefixes
           countType     = "imageCountMoreThan"
           countNumber   = 5
         }
